@@ -1,4 +1,6 @@
-from scipy.ndimage import binary_erosion, binary_dilation
+from scipy.ndimage import binary_erosion, binary_dilation, \
+    binary_closing, binary_opening, iterate_structure, \
+    grey_closing, grey_opening, grey_dilation
 from scipy.misc import imread
 import numpy as np
 from copy import copy
@@ -77,3 +79,22 @@ def iterate(func, image, A, B, iteration=-1):
 def build_convex_hull_binary_image(image, A, B):
     return iterate(thickening, image, A, B)
 
+
+def calculate_spectrum_binary_image(image, structure, n):
+    if n >= 0:
+        return np.count_nonzero(binary_opening(image, iterate_structure(structure, n)) -
+                                binary_opening(image, iterate_structure(structure, n + 1)))
+    else:
+        return np.count_nonzero(binary_closing(image, iterate_structure(structure, -n)) -
+                                binary_closing(image, iterate_structure(structure, -n - 1)))
+
+
+def calculate_spectrum_grey_image(image, structure, n):
+    if n >= 0:
+        structure1 = iterate_structure(structure, n).astype(np.int32) * 255
+        structure2 = iterate_structure(structure, n + 1).astype(np.int32) * 255
+        return np.sum(grey_opening(image, structure=structure1) - grey_opening(image, structure=structure2))
+    else:
+        structure1 = iterate_structure(structure, -n).astype(np.int32) * 255
+        structure2 = iterate_structure(structure, -n - 1).astype(np.int32) * 255
+        return np.sum(grey_closing(image, structure=structure1) - grey_closing(image, structure=structure2))

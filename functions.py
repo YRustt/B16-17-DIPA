@@ -38,41 +38,42 @@ def x(image, A, B):
     return binary_erosion(image, A) * binary_erosion(np.invert(image), B)
 
 
+def psi(f):
+    def run(image, A, B):
+        image = copy(image)
+        for a, b in zip(A, B):
+            image = f(image, a, b)
+        return image
+    return run
+
+
+@psi
 def thickening(image, A, B):
     image = copy(image)
     return image + x(image, A, B)
 
 
+@psi
 def thinning(image, A, B):
     image = copy(image)
     return image - x(image, A, B)
 
 
-def build_convex_hull_binary_image(image):
-    T = {1: np.array([[1, 1, 1], [0, 0, 1], [0, 0, 0]], dtype=np.bool),
-         2: np.array([[1, 1, 0], [1, 0, 0], [1, 0, 0]], dtype=np.bool),
-         3: np.array([[0, 0, 0], [1, 0, 0], [1, 1, 1]], dtype=np.bool),
-         4: np.array([[0, 0, 1], [0, 0, 1], [0, 1, 1]], dtype=np.bool),
-         5: np.array([[1, 1, 1], [1, 0, 0], [0, 0, 0]], dtype=np.bool),
-         6: np.array([[1, 0, 0], [1, 0, 0], [1, 1, 0]], dtype=np.bool),
-         7: np.array([[0, 0, 0], [0, 0, 1], [1, 1, 1]], dtype=np.bool),
-         8: np.array([[0, 1, 1], [0, 0, 1], [0, 0, 1]], dtype=np.bool)}
-    B = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]], dtype=np.bool)
+def iterate(func, image, A, B, iteration=-1):
+    iteration = int(iteration)
+    if iteration < 1:
+        it1 = func(image, A, B)
+        it2 = func(it1, A, B)
+        while not np.all(it1 == it2):
+            it1, it2 = it2, func(it2, A, B)
+        return it2
+    else:
+        image = copy(image)
+        for _ in range(iteration):
+            image = func(image, A, B)
+        return image
 
-    def psi(im):
-        im = copy(im)
-        im = thickening(im, T[1], B)
-        im = thickening(im, T[2], B)
-        im = thickening(im, T[3], B)
-        im = thickening(im, T[4], B)
-        im = thickening(im, T[5], B)
-        im = thickening(im, T[6], B)
-        im = thickening(im, T[7], B)
-        im = thickening(im, T[8], B)
-        return im
 
-    it1 = psi(image)
-    it2 = psi(it1)
-    while not np.all(it1 == it2):
-        it1, it2 = it2, psi(it2)
-    return it2
+def build_convex_hull_binary_image(image, A, B):
+    return iterate(thickening, image, A, B)
+

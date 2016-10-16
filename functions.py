@@ -91,10 +91,10 @@ def calculate_spectrum_binary_image(image, structure, n):
 
 def calculate_spectrum_grey_image(image, structure, n):
     if n >= 0:
-        structure1 = iterate_structure(structure, n).astype(np.int32) * 255
-        structure2 = iterate_structure(structure, n + 1).astype(np.int32) * 255
+        structure1 = np.invert(iterate_structure(structure, n)).astype(np.int32) * 255
+        structure2 = np.invert(iterate_structure(structure, n + 1)).astype(np.int32) * 255
         return np.sum(grey_opening(image, structure=structure1) - grey_opening(image, structure=structure2))
     else:
-        structure1 = iterate_structure(structure, -n).astype(np.int32) * 255
-        structure2 = iterate_structure(structure, -n - 1).astype(np.int32) * 255
+        structure1 = np.invert(iterate_structure(structure, -n)).astype(np.int32) * 255
+        structure2 = np.invert(iterate_structure(structure, -n - 1)).astype(np.int32) * 255
         return np.sum(grey_closing(image, structure=structure1) - grey_closing(image, structure=structure2))

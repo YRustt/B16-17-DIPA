@@ -21,7 +21,7 @@ def build_skeleton_binary_image(image, structure):
             S.append(y1)
             return S
         y3 = binary_dilation(y2, structure)
-        S.append(y1 - y3)
+        S.append(y1 * np.invert(y3))
         n, y1 = n + 1, y2
 
 
@@ -56,7 +56,7 @@ def thickening(image, A, B):
 @psi
 def thinning(image, A, B):
     image = copy(image)
-    return image - x(image, A, B)
+    return image * np.invert(x(image, A, B))
 
 
 def iterate(func, image, A, B, iteration=-1):

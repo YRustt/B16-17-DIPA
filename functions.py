@@ -35,10 +35,20 @@ def reconstruction_binary_image(S, structure):
 
 
 def x(image, A, B):
-    return binary_erosion(image, A) * binary_dilation(np.invert(image), B)
+    return binary_erosion(image, A) * binary_erosion(np.invert(image), B)
 
 
-def build_convex_hull(image):
+def thickening(image, A, B):
+    image = copy(image)
+    return image + x(image, A, B)
+
+
+def thinning(image, A, B):
+    image = copy(image)
+    return image - x(image, A, B)
+
+
+def build_convex_hull_binary_image(image):
     T = {1: np.array([[1, 1, 1], [0, 0, 1], [0, 0, 0]], dtype=np.bool),
          2: np.array([[1, 1, 0], [1, 0, 0], [1, 0, 0]], dtype=np.bool),
          3: np.array([[0, 0, 0], [1, 0, 0], [1, 1, 1]], dtype=np.bool),
@@ -48,17 +58,21 @@ def build_convex_hull(image):
          7: np.array([[0, 0, 0], [0, 0, 1], [1, 1, 1]], dtype=np.bool),
          8: np.array([[0, 1, 1], [0, 0, 1], [0, 0, 1]], dtype=np.bool)}
     B = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]], dtype=np.bool)
-    def phi(im):
+
+    def psi(im):
         im = copy(im)
-        im = im + x(im, T[1], B)
-        im = im + x(im, T[2], B)
-        im = im + x(im, T[3], B)
-        im = im + x(im, T[4], B)
-        im = im + x(im, T[5], B)
-        im = im + x(im, T[6], B)
-        im = im + x(im, T[7], B)
-        im = im + x(im, T[8], B)
+        im = thickening(im, T[1], B)
+        im = thickening(im, T[2], B)
+        im = thickening(im, T[3], B)
+        im = thickening(im, T[4], B)
+        im = thickening(im, T[5], B)
+        im = thickening(im, T[6], B)
+        im = thickening(im, T[7], B)
+        im = thickening(im, T[8], B)
         return im
-    for _ in range(1000):
-        image = phi(image)
-    return image
+
+    it1 = psi(image)
+    it2 = psi(it1)
+    while not np.all(it1 == it2):
+        it1, it2 = it2, psi(it2)
+    return it2

@@ -11,6 +11,12 @@ def read_binary_image(filename):
     return image
 
 
+def read_grey_image(filename):
+    image_grey = imread(filename, flatten=True)
+    image_grey = np.ones(image_grey.shape) * 255 - image_grey
+    return image_grey
+
+
 def is_empty_binary_image(image):
     return True if np.count_nonzero(image) == 0 else False
 
@@ -107,3 +113,28 @@ def calculate_spectrum_grey_image(image, structure, n):
     else:
         return np.sum(grey_closing(image, structure=iterate_grey_structure(structure, -n)) -
                       grey_closing(image, structure=iterate_grey_structure(structure, -n - 1)))
+
+
+def calculate_filter_binary_image(image, win_size, k):
+    image, radius = copy(image), win_size // 2
+    C = np.zeros((image.shape[0] + 2 * radius, image.shape[1] + 2 * radius), dtype=np.bool)
+    C[radius: -radius, radius: -radius] = image
+    for i in range(radius + 1, C.shape[0] - radius):
+        for j in range(radius + 1, C.shape[1] - radius):
+            if np.count_nonzero(C[i - radius: i + radius + 1, j - radius: j + radius + 1]) >= k:
+                image[i - radius - 1][j - radius - 1] = True
+            else:
+                image[i - radius - 1][j - radius - 1] = False
+    return image
+
+
+def calculate_filter_grey_image(image, win_size, k):
+    image, radius = copy(image), win_size // 2
+    C = np.zeros((image.shape[0] + 2 * radius, image.shape[1] + 2 * radius))
+    C[radius: -radius, radius: -radius] = image
+    for i in range(radius + 1, C.shape[0] - radius):
+        for j in range(radius + 1, C.shape[1] - radius):
+            cur_win = C[i - radius: i + radius + 1, j - radius: j + radius + 1].reshape(-1)
+            cur_win = np.sort(cur_win)
+            image[i - radius - 1][j - radius - 1] = cur_win[-k]
+    return image

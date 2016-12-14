@@ -1,3 +1,6 @@
 .idea/*
 __pycache__/*
 venv/*
+ransac/*
+opencv/*
+opencv_contrib/*

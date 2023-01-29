@@ -4,3 +4,4 @@ venv/*
 ransac/*
 opencv/*
 opencv_contrib/*
+.ipynb_checkpoints/
